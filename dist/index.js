@@ -215,6 +215,7 @@ function main() {
         core.debug(`failOnErrorGlobal: ${typeof failOnErrorGlobal} + ${failOnErrorGlobal.toString()}`);
         const octokit = github.getOctokit(token);
         let prNumber;
+        let prState;
         core.debug('github.context');
         core.debug(JSON.stringify(github.context, null, 2));
         const { job, payload } = github.context;
@@ -229,6 +230,7 @@ function main() {
         if (payload.number && payload.pull_request) {
             core.debug('prNumber retrieved from pull_request');
             prNumber = payload.number;
+            prState = payload.action;
         }
         else {
             core.debug('Not a pull_request, so doing a API search');
@@ -242,6 +244,7 @@ function main() {
                 const pr = result.data.items.length > 0 && result.data.items[0];
                 core.debug(`Found related pull_request: ${JSON.stringify(pr, null, 2)}`);
                 prNumber = pr ? pr.number : undefined;
+                prState = pr ? pr.state : undefined;
             }
             catch (e) {
                 // As mentioned in https://github.com/orgs/community/discussions/25220#discussioncomment-8971083
@@ -253,7 +256,7 @@ function main() {
             core.info(`😢 No related PR found, skip it.`);
             return;
         }
-        core.info(`Find PR number: ${prNumber}`);
+        core.info(`Found PR number: ${prNumber}, PR status: ${prState}`);
         const commentIfNotForkedRepo = (message) => {
             // if it is forked repo, don't comment
             if (fromForkedRepo) {
@@ -315,7 +318,7 @@ ${helpers_1.getCommentFooter()}
             : `https://github.com/${github.context.repo.owner}/${github.context.repo.repo}/actions/runs/${github.context.runId}`;
         core.debug(`teardown enabled?: ${teardown}`);
         core.debug(`event action?: ${payload.action}`);
-        if (teardown && payload.action === 'closed') {
+        if (teardown && prState === 'closed') {
             try {
                 core.info(`Teardown: ${url}`);
                 core.setSecret(surgeToken);
