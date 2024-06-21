@@ -65,7 +65,7 @@ async function main() {
     core.info(`😢 No related PR found, skip it.`);
     return;
   }
-  core.info(`Find PR number: ${prNumber}, PR status: ${prStatus}`);
+  core.info(`Found PR number: ${prNumber}, PR status: ${prStatus}`);
 
   const commentIfNotForkedRepo = (message: string) => {
     // if it is forked repo, don't comment
